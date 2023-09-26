@@ -1,4 +1,4 @@
-import express, {Request, Response} from 'express'
+import express, { Request, Response } from 'express'
 import bodyParser from 'body-parser'
 
 
@@ -29,16 +29,16 @@ interface Movie {
 }
 
 const movies = [
-  {name: 'The Godfather', year: 1972, runtime: 175, target: 1},
-  {name: 'Goodfellas', year: 1990, runtime: 146, target: 1},
-  {name: 'The Usual Suspects', year: 1995, runtime: 106, target: 1},
-  {name: 'Lady Bird', year: 2017, runtime: 94, target: 1},
-  {name: 'Mad Max: Fury Road', year: 2015, runtime: 120, target: 1},
-  {name: 'Barbie', year: 2023, runtime: 114, target: 0},
-  {name: 'Forrest Gump', year: 1994, runtime: 142, target: 0},
-  {name: 'Back to the Future', year: 1984, runtime: 116, target: 0},
-  {name: 'Titanic', year: 1997, runtime: 194, target: 0},
-  {name: 'The Green mile', year: 1999, runtime: 189, target: 0}
+  { name: 'The Godfather', year: 1972, runtime: 175, target: 1 },
+  { name: 'Goodfellas', year: 1990, runtime: 146, target: 1 },
+  { name: 'The Usual Suspects', year: 1995, runtime: 106, target: 1 },
+  { name: 'Lady Bird', year: 2017, runtime: 94, target: 1 },
+  { name: 'Mad Max: Fury Road', year: 2015, runtime: 120, target: 1 },
+  { name: 'Barbie', year: 2023, runtime: 114, target: 0 },
+  { name: 'Forrest Gump', year: 1994, runtime: 142, target: 0 },
+  { name: 'Back to the Future', year: 1984, runtime: 116, target: 0 },
+  { name: 'Titanic', year: 1997, runtime: 194, target: 0 },
+  { name: 'The Green mile', year: 1999, runtime: 189, target: 0 }
 ]
 
 const godfather = movies[0]
@@ -50,9 +50,9 @@ const totalRuntime = movies.reduce((totalRuntime, movie) => totalRuntime + movie
 const averageRuntime = totalRuntime / movies.length
 
 const network = [
-  [0,0,0],
-  [0,0,0],
-  [0,0,0]
+  [0, 0, 0],
+  [0, 0, 0],
+  [0, 0, 0]
 ]
 
 function sigma(n: number) {
@@ -103,12 +103,12 @@ function evolve(network: number[][]) {
 
 function train() {
   let steps = 0
-  while(steps < 1000) {
+  while (steps < 1000) {
     const offspring = evolve(network)
     const originalLoss = getLoss(movies, network)
     const offspringLoss = getLoss(movies, offspring)
     const improved = offspringLoss < originalLoss
-    if(improved) {
+    if (improved) {
       console.log('steps when improved:', steps)
       console.log('offspring loss', offspringLoss.toFixed(20))
       offspring.forEach((axons, index) => {
@@ -145,9 +145,9 @@ app.get('/movie/:name', getMovie)
 
 function postMovie(request: Request, response: Response) {
   const newMovie = {
-    name: request.body.name, 
-    year: request.body.year, 
-    runtime: request.body.runtime, 
+    name: request.body.name,
+    year: request.body.year,
+    runtime: request.body.runtime,
     target: request.body.target
   }
   movies.push(newMovie)
