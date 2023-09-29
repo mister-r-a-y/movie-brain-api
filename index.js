@@ -18,7 +18,7 @@ function getRoot(request, response) {
     response.send('welcome home');
 }
 app.get('/', getRoot);
-const movies = [
+const trainingMovies = [
     { name: 'The Godfather', year: 1972, runtime: 175, target: 1 },
     { name: 'Goodfellas', year: 1990, runtime: 146, target: 1 },
     { name: 'The Usual Suspects', year: 1995, runtime: 106, target: 1 },
@@ -30,11 +30,10 @@ const movies = [
     { name: 'Titanic', year: 1997, runtime: 194, target: 0 },
     { name: 'The Green mile', year: 1999, runtime: 189, target: 0 }
 ];
-const godfather = movies[0];
-const totalYear = movies.reduce((totalYear, movie) => totalYear + movie.year, 0);
-const averageYear = totalYear / movies.length;
-const totalRuntime = movies.reduce((totalRuntime, movie) => totalRuntime + movie.runtime, 0);
-const averageRuntime = totalRuntime / movies.length;
+const totalYear = trainingMovies.reduce((totalYear, movie) => totalYear + movie.year, 0);
+const averageYear = totalYear / trainingMovies.length;
+const totalRuntime = trainingMovies.reduce((totalRuntime, movie) => totalRuntime + movie.runtime, 0);
+const averageRuntime = totalRuntime / trainingMovies.length;
 const network = [
     [0, 0, 0],
     [0, 0, 0],
@@ -79,19 +78,19 @@ function evolve(network) {
     return network.map(axons => axons.map(mutate));
 }
 function train() {
-    let steps = 0;
+    let steps = 1;
     while (steps < 1000) {
         const offspring = evolve(network);
-        const originalLoss = getLoss(movies, network);
-        const offspringLoss = getLoss(movies, offspring);
-        const improved = offspringLoss < originalLoss;
+        const originalLoss = getLoss(trainingMovies, network);
+        const offspringLoss = getLoss(trainingMovies, offspring);
+        const difference = originalLoss - offspringLoss;
+        const improved = difference > 0.0001;
         if (improved) {
-            console.log('steps when improved:', steps);
-            console.log('offspring loss', offspringLoss.toFixed(20));
+            console.info(`Loss: ${offspringLoss.toFixed(20)} (${steps}) [${difference.toFixed(20)}]`);
             offspring.forEach((axons, index) => {
                 network[index] = axons;
             });
-            steps = 0;
+            steps = 1;
         }
         else {
             steps += 1;
@@ -101,7 +100,7 @@ function train() {
 train();
 console.log('new network', network);
 function getMovies(request, response) {
-    response.send(movies);
+    response.send(trainingMovies);
 }
 app.get('/movies', getMovies);
 function getHello(request, response) {
@@ -110,18 +109,23 @@ function getHello(request, response) {
 }
 app.get('/hello/:abc', getHello);
 function getMovie(request, response) {
-    const movie = movies.find(movie => movie.name === request.params.name);
+    const movie = trainingMovies.find(movie => movie.name === request.params.name);
     response.send(movie);
 }
 app.get('/movie/:name', getMovie);
-function postMovie(request, response) {
+function postTrainingMovie(request, response) {
     const newMovie = {
         name: request.body.name,
         year: request.body.year,
         runtime: request.body.runtime,
         target: request.body.target
     };
-    movies.push(newMovie);
+    trainingMovies.push(newMovie);
     response.send('movie added');
 }
-app.post('/movie', postMovie);
+app.post('/training-movie', postTrainingMovie);
+function postTestingMovie(request, response) {
+    const prediction = predict(network, request.body.year, request.body.runtime);
+    response.send({ prediction });
+}
+app.post('/testing-movie', postTestingMovie);
