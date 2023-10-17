@@ -38,7 +38,7 @@ const trainingMovies = [
   { name: 'Forrest Gump', year: 1994, runtime: 142, target: 0 },
   { name: 'Back to the Future', year: 1984, runtime: 116, target: 0 },
   { name: 'Titanic', year: 1997, runtime: 194, target: 0 },
-  { name: 'The Green mile', year: 1999, runtime: 189, target: 0 }
+  { name: 'The Green Mile', year: 1999, runtime: 189, target: 0 }
 ]
 
 const totalYear = trainingMovies.reduce((totalYear, movie) => totalYear + movie.year, 0)
@@ -98,28 +98,49 @@ function evolve(network: number[][]) {
   return network.map(axons => axons.map(mutate))
 }
 
+type AnalysisRow = Record<number, string>
 
 function train() {
   let steps = 1
-  while (steps < 1000) {
+  let improvements = 0
+  let bestLoss = 1
+  while (steps < 100000) {
     const offspring = evolve(network)
     const originalLoss = getLoss(trainingMovies, network)
     const offspringLoss = getLoss(trainingMovies, offspring)
     const difference = originalLoss - offspringLoss
-    const improved = difference > 0.0001
+    const improved = difference > 0
     if (improved) {
-      console.info(`Loss: ${offspringLoss.toFixed(20)} (${steps}) [${difference.toFixed(20)}]`)
+      improvements += 1
+      bestLoss = offspringLoss
+      // console.info(`Loss: ${offspringLoss.toFixed(20)} (${steps}) [${difference.toFixed(20)}] {${improvements}}`)
       offspring.forEach((axons, index) => {
         network[index] = axons
       })
       steps = 1
     } else {
+      bestLoss = originalLoss
       steps += 1
     }
   }
+  const years = [1900, 1950, 2000, 2050, 2100]
+  const runtimes = [60, 90, 120, 150, 180, 210]
+  const analysis: Record<number, AnalysisRow> = {}
+  runtimes.forEach(runtime => {
+    const row: AnalysisRow = {}
+    years.forEach(year => {
+      const prediction = predict(network, year, runtime)
+      row[year] = prediction.toFixed(5)
+    })
+    analysis[runtime] = row
+  })
+  console.log('Analysis:')
+  console.table(analysis)
+  console.log(`Network <${bestLoss.toFixed(5)}> {${improvements}}:`, network)
+  return analysis
 }
 train()
-console.log('new network', network)
+
 function getMovies(request: Request, response: Response) {
   response.send(trainingMovies)
 }
@@ -148,7 +169,11 @@ function postTrainingMovie(request: Request, response: Response) {
     target: request.body.target
   }
   trainingMovies.push(newMovie)
-  response.send('movie added')
+  network[0] = [0,0,0]
+  network[1] = [0,0,0]
+  network[2] = [0,0,0]
+  const analysis = train()
+  response.send({trainingMovies, analysis, network})
 }
 
 app.post('/training-movie', postTrainingMovie)
